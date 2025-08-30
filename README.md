@@ -1,59 +1,108 @@
 # PwaIniaProject
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.1.
+Proyecto generado con [Angular CLI](https://github.com/angular/angular-cli) v20.2.1 y actualizado para funcionar como PWA e incluir empaquetado Android (APK) con Capacitor.
 
-## Development server
+## Cambios principales realizados
 
-To start a local development server, run:
+- PWA habilitado con `@angular/pwa`.
+  - Registro del Service Worker en `src/app/app.config.ts` con `provideServiceWorker('ngsw-worker.js', { enabled: !isDevMode(), registrationStrategy: 'registerWhenStable:30000' })`.
+  - `manifest.webmanifest` en `public/` y enlace en `src/index.html` (se corrigieron duplicados).
+  - `ngsw-config.json` para caché de assets y PWA.
+- Redirección al iniciar la app hacia `https://zimmzimmgames.com` en `src/app/app.ts`.
+- Integración de Capacitor para Android:
+  - Paquetes: `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`.
+  - Configuración en `capacitor.config.ts` con `webDir: 'dist/pwa-inia-project/browser'` y `server.allowNavigation: ['zimmzimmgames.com']`.
+  - Proyecto Android agregado en `android/` y sincronizado.
+- Script de automatización `PowerShell.ps1` para construir APK (debug/release). Incluye manejo de JDK 17 (auto-descarga portátil si falta) y `-JavaHome` opcional.
+- Script auxiliar `scripts/InstallJdk17.ps1` para descargar/instalar JDK 17 (portátil) en `.tools/`.
 
-```bash
-ng serve
-```
+## Requisitos
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- Node.js 18/20.
+- JDK 17 (el script puede descargar una versión portátil en `.tools`).
+- Android SDK (el wrapper Gradle puede instalar componentes faltantes automáticamente al compilar).
 
-## Code scaffolding
+## Desarrollo
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+Inicia el servidor local de desarrollo:
 
 ```bash
-ng build
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Luego abre `http://localhost:4200/`. En ejecución normal, la app redirige a `https://zimmzimmgames.com` al iniciar.
 
-## Running unit tests
+## Build web (PWA)
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Compilar en producción:
 
 ```bash
-ng test
+npm run build
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+El resultado queda en `dist/pwa-inia-project/browser`. Para probar el Service Worker, sirve la carpeta estática (por ejemplo):
 
 ```bash
-ng e2e
+npx http-server dist/pwa-inia-project/browser -p 8080
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Android (APK) con Capacitor
 
-## Additional Resources
+Sincronizar Capacitor y plugins (si cambiaste la web):
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```bash
+npx cap sync android
+```
+
+Generar APK con el script PowerShell (debug por defecto):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\PowerShell.ps1 -Configuration debug
+``;
+
+Si tienes un JDK 17 específico, pásalo explícitamente:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\PowerShell.ps1 -Configuration debug -JavaHome "C:\Program Files\Eclipse Adoptium\jdk-17"
+```
+
+El script:
+
+- Instala dependencias npm (omitible con `-SkipInstall`).
+- Compila Angular producción (omitible con `-SkipBuild`).
+- Sincroniza Capacitor (`npx cap sync android`, omitible con `-SkipSync`).
+- Asegura JDK 17 (detecta, intenta instalar o usa `-JavaHome`).
+- Compila APK con Gradle.
+
+Salida esperada (debug):
+
+```
+android\app\build\outputs\apk\debug\app-debug.apk
+```
+
+Instalar en dispositivo/emulador:
+
+```powershell
+adb install "android\app\build\outputs\apk\debug\app-debug.apk"
+```
+
+Para release:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\PowerShell.ps1 -Configuration release
+```
+
+Nota: Para firmar release, necesitarás un keystore y configurar firma en el proyecto Android (se puede automatizar en una iteración futura).
+
+## Comandos útiles
+
+- Servir en desarrollo: `npm start`
+- Build producción (web): `npm run build`
+- Sincronizar Capacitor: `npx cap sync android`
+- Abrir Android Studio (opcional): `npx cap open android`
+
+## Referencias
+
+- Angular PWA: `https://angular.dev/tools/pwa`
+- Capacitor: `https://capacitorjs.com/`
+

@@ -40,3 +40,25 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Capacitor / Android
+/android/.gradle/
+/android/.cxx/
+/android/build/
+/android/app/build/
+/android/captures/
+/android/local.properties
+
+# Local tools (JDK portátil instalado por scripts)
+/.tools/
+
+# Keystores y archivos sensibles de firma
+*.keystore
+*.jks
+*.p12
+*.keystore.properties
+
+# Variables de entorno locales
+.env
+.env.local
+.env.*.local
