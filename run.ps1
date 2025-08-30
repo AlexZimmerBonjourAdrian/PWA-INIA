@@ -18,27 +18,58 @@ function Show-Usage {
   Write-Host "  7  Abrir Android Studio (npx cap open android)" -ForegroundColor Gray
 }
 
+function Test-NpmInstalled {
+  if (-not (Test-Path 'node_modules')) { return $false }
+  $paths = @(
+    'node_modules/@angular/core',
+    'node_modules/@angular/cli',
+    'node_modules/@capacitor/core'
+  )
+  foreach ($p in $paths) { if (-not (Test-Path $p)) { return $false } }
+  return $true
+}
+
+function Ensure-NpmDependencies {
+  if (Test-NpmInstalled) {
+    Write-Host 'Dependencias npm detectadas. Omitiendo npm install.' -ForegroundColor Yellow
+  } else {
+    Write-Host 'Instalando dependencias npm...' -ForegroundColor Green
+    cmd /c "npm install --no-audit --no-fund"
+  }
+}
+
 switch ($Option) {
   '1' {
-    & .\PowerShell.ps1 -Configuration debug
+    if (Test-NpmInstalled) {
+      & .\PowerShell.ps1 -Configuration debug -SkipInstall
+    } else {
+      & .\PowerShell.ps1 -Configuration debug
+    }
     break
   }
   '2' {
-    & .\PowerShell.ps1 -Configuration release
+    if (Test-NpmInstalled) {
+      & .\PowerShell.ps1 -Configuration release -SkipInstall
+    } else {
+      & .\PowerShell.ps1 -Configuration release
+    }
     break
   }
   '3' {
     Write-Host "Iniciando servidor de desarrollo..." -ForegroundColor Green
+    Ensure-NpmDependencies
     Start-Process powershell -ArgumentList "-NoExit","-Command","npm start"
     break
   }
   '4' {
     Write-Host "Ejecutando build de producción (web)..." -ForegroundColor Green
+    Ensure-NpmDependencies
     cmd /c "npm run -s build"
     break
   }
   '5' {
     Write-Host "Sincronizando Capacitor Android..." -ForegroundColor Green
+    Ensure-NpmDependencies
     cmd /c "npx cap sync android"
     break
   }

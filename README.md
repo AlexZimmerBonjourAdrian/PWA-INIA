@@ -58,7 +58,7 @@ Generar APK con el script PowerShell (debug por defecto):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\PowerShell.ps1 -Configuration debug
-``;
+```
 
 Si tienes un JDK 17 específico, pásalo explícitamente:
 
@@ -91,6 +91,30 @@ Para release:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\PowerShell.ps1 -Configuration release
 ```
+
+## Ejecución rápida (run.ps1)
+
+Menú rápido para tareas comunes (build APK, dev server, sync, instalar JDK 17):
+
+```powershell
+./run.ps1 1
+```
+
+Si hay restricción de ejecución:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run.ps1 1
+```
+
+Opciones disponibles:
+
+- 1: Compilar APK (debug)
+- 2: Compilar APK (release)
+- 3: Iniciar servidor de desarrollo (npm start)
+- 4: Build web (Angular producción)
+- 5: Sincronizar Capacitor Android (npx cap sync android)
+- 6: Instalar JDK 17 portátil (.tools)
+- 7: Abrir Android Studio (npx cap open android)
 
 Nota: Para firmar release, necesitarás un keystore y configurar firma en el proyecto Android (se puede automatizar en una iteración futura).
 
