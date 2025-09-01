@@ -24,6 +24,17 @@ function Invoke-Step {
   }
 }
 
+function Test-NpmInstalled {
+  if (-not (Test-Path 'node_modules')) { return $false }
+  $paths = @(
+    'node_modules/@angular/core',
+    'node_modules/@angular/cli',
+    'node_modules/@capacitor/core'
+  )
+  foreach ($p in $paths) { if (-not (Test-Path $p)) { return $false } }
+  return $true
+}
+
 function Resolve-GradleTask {
   Param([string]$Config)
   if ($Config -ieq 'release') { return 'assembleRelease' }
@@ -162,7 +173,11 @@ if ($Clean) {
 }
 
 if (-not $SkipInstall) {
-  Invoke-Step -Command "npm install --no-audit --no-fund" -Description 'Instalar dependencias npm'
+  if (Test-NpmInstalled) {
+    Write-Host 'Dependencias npm detectadas. Omitiendo npm install.' -ForegroundColor Yellow
+  } else {
+    Invoke-Step -Command "npm install --no-audit --no-fund" -Description 'Instalar dependencias npm'
+  }
 }
 
 if (-not $SkipBuild) {
