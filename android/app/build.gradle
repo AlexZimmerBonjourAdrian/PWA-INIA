@@ -22,6 +22,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    // Renombrar los APK con prefijo INIA
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def variantName = variant.buildType.name
+            def newApkName = "INIA-${variantName}.apk"
+            if (output.outputFileName != null && output.outputFileName.endsWith('.apk')) {
+                output.outputFileName = newApkName
+            }
+        }
+    }
 }
 
 repositories {
