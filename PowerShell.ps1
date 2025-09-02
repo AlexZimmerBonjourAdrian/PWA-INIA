@@ -85,11 +85,43 @@ function Ensure-Java17 {
     $candidates = @()
     if ($env:JAVA_HOME_17_X64) { $candidates += $env:JAVA_HOME_17_X64 }
     if ($env:JDK_17) { $candidates += $env:JDK_17 }
-    foreach ($home in $candidates) {
-      if ($home -and (Test-Path (Join-Path $home 'bin\\java.exe'))) {
-        $env:JAVA_HOME = $home
+    foreach ($candidateHome in $candidates) {
+      if ($candidateHome -and (Test-Path (Join-Path $candidateHome 'bin\\java.exe'))) {
+        $env:JAVA_HOME = $candidateHome
         $env:PATH = (Join-Path $env:JAVA_HOME 'bin') + ";" + $env:PATH
         break
+      }
+    }
+  }
+
+  # Si la versión sigue siendo <17, intentar usar JDK embebido en .tools\jdk17.path
+  if ((Get-JavaVersionMajor) -lt 17) {
+    try {
+      $marker = Join-Path (Get-Location) '.tools\\jdk17.path'
+      if (Test-Path $marker) {
+        $embeddedHome = (Get-Content -Path $marker -ErrorAction SilentlyContinue | Select-Object -First 1)
+        if ($embeddedHome -and (Test-Path (Join-Path $embeddedHome 'bin\\java.exe'))) {
+          $env:JAVA_HOME = $embeddedHome
+          $env:PATH = (Join-Path $env:JAVA_HOME 'bin') + ";" + $env:PATH
+          return $env:JAVA_HOME
+        }
+      }
+    } catch { }
+  }
+
+  # Si aún es <17, intentar usar JBR/JRE embebido de Android Studio
+  if ((Get-JavaVersionMajor) -lt 17) {
+    $studioCandidates = @(
+      'C:\\Program Files\\Android\\Android Studio\\jbr',
+      'C:\\Program Files\\Android\\Android Studio\\jre',
+      'C:\\Program Files (x86)\\Android\\Android Studio\\jbr',
+      'C:\\Program Files (x86)\\Android\\Android Studio\\jre'
+    )
+    foreach ($studioHome in $studioCandidates) {
+      if ($studioHome -and (Test-Path (Join-Path $studioHome 'bin\\java.exe'))) {
+        $env:JAVA_HOME = $studioHome
+        $env:PATH = (Join-Path $env:JAVA_HOME 'bin') + ";" + $env:PATH
+        return $env:JAVA_HOME
       }
     }
   }
